@@ -1,0 +1,1512 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>D&D Monster Bestiary</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --parchment: #f5e9c9;
+            --dark-leather: #3a2618;
+            --light-leather: #5d4037;
+            --gold: #d4af37;
+            --red: #8b0000;
+            --green: #006400;
+            --blue: #0d3b66;
+            --purple: #4b0082;
+        }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Times New Roman', serif;
+        }
+        
+        body {
+            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"><rect width="100" height="100" fill="%233a2618"/><path d="M0 0L100 100M100 0L0 100" stroke="%2326180f" stroke-width="1"/></svg>');
+            padding: 20px;
+            min-height: 100vh;
+            color: #333;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .app-container {
+            width: 95%;
+            max-width: 1200px;
+            background: var(--parchment);
+            border: 15px solid var(--dark-leather);
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7);
+            position: relative;
+            overflow: hidden;
+            min-height: 90vh;
+        }
+        
+        .app-container::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200"><rect width="200" height="200" fill="%23f5e9c9" opacity="0.9"/><path d="M0 0L200 200M200 0L0 200" stroke="%23e8d9b0" stroke-width="0.5"/></svg>');
+            opacity: 0.4;
+            pointer-events: none;
+        }
+        
+        .header {
+            background: var(--dark-leather);
+            color: var(--gold);
+            padding: 20px;
+            text-align: center;
+            border-bottom: 5px solid var(--gold);
+            position: relative;
+        }
+        
+        .header h1 {
+            font-size: 2.5rem;
+            letter-spacing: 3px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        }
+        
+        .header p {
+            font-style: italic;
+            margin-top: 10px;
+            color: #f0e6d2;
+        }
+        
+        .tabs {
+            display: flex;
+            background: var(--light-leather);
+            padding: 0;
+        }
+        
+        .tab {
+            padding: 15px 30px;
+            color: #f0e6d2;
+            cursor: pointer;
+            font-weight: bold;
+            letter-spacing: 1px;
+            border-right: 1px solid rgba(0, 0, 0, 0.3);
+            transition: all 0.3s;
+            position: relative;
+        }
+        
+        .tab.active {
+            background: var(--parchment);
+            color: var(--dark-leather);
+        }
+        
+        .tab:hover:not(.active) {
+            background: rgba(139, 69, 19, 0.7);
+        }
+        
+        .tab i {
+            margin-right: 8px;
+        }
+        
+        .content {
+            padding: 20px;
+            min-height: 500px;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        /* Player View Styles */
+        .player-controls {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            padding: 10px;
+            background: rgba(139, 69, 19, 0.1);
+            border-radius: 5px;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        
+        .search-container {
+            display: flex;
+            gap: 10px;
+            flex-grow: 1;
+            max-width: 400px;
+        }
+        
+        .search-container input {
+            flex-grow: 1;
+            padding: 10px 15px;
+            border: 2px solid var(--light-leather);
+            border-radius: 30px;
+            font-size: 1rem;
+            background: rgba(255, 255, 255, 0.8);
+        }
+        
+        .monster-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+        }
+        
+        .monster-card {
+            background: white;
+            border: 2px solid var(--light-leather);
+            border-radius: 8px;
+            padding: 15px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            transition: transform 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .monster-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+        }
+        
+        .monster-number {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: var(--dark-leather);
+            color: var(--gold);
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 0.9rem;
+        }
+        
+        .monster-image {
+            width: 100%;
+            height: 200px;
+            background-color: #ddd;
+            background-position: center;
+            background-size: contain;
+            background-repeat: no-repeat;
+            margin: 10px 0;
+            border: 1px solid #aaa;
+            border-radius: 4px;
+        }
+        
+        .silhouette {
+            background-color: #333;
+            filter: brightness(0.1);
+        }
+        
+        .monster-name {
+            font-size: 1.4rem;
+            font-weight: bold;
+            margin: 5px 0;
+            text-align: center;
+            color: var(--dark-leather);
+        }
+        
+        .hidden-name {
+            letter-spacing: 4px;
+            color: #666;
+        }
+        
+        .monster-type {
+            font-style: italic;
+            text-align: center;
+            margin-bottom: 10px;
+            color: #666;
+        }
+        
+        .danger-level {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        
+        .low-danger {
+            background: #e6f7e6;
+            color: var(--green);
+            border: 1px solid var(--green);
+        }
+        
+        .medium-danger {
+            background: #fff9e6;
+            color: #b8860b;
+            border: 1px solid #b8860b;
+        }
+        
+        .high-danger {
+            background: #ffe6e6;
+            color: var(--red);
+            border: 1px solid var(--red);
+        }
+        
+        .deadly-danger {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #721c24;
+        }
+        
+        .notes-section {
+            margin-top: 15px;
+            padding-top: 10px;
+            border-top: 1px dashed #ccc;
+        }
+        
+        .notes-section h4 {
+            margin-bottom: 8px;
+            color: var(--dark-leather);
+        }
+        
+        .notes-textarea {
+            width: 100%;
+            min-height: 80px;
+            padding: 8px;
+            border: 1px solid #aaa;
+            border-radius: 4px;
+            font-family: inherit;
+            resize: vertical;
+        }
+        
+        .dm-secrets {
+            background: rgba(139, 0, 0, 0.1);
+            padding: 10px;
+            border-radius: 4px;
+            margin-top: 15px;
+            border-left: 3px solid var(--red);
+        }
+        
+        .dm-secrets h4 {
+            color: var(--red);
+            margin-bottom: 5px;
+        }
+        
+        .stage-control {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 15px;
+            padding-top: 10px;
+            border-top: 1px dashed #ccc;
+        }
+        
+        /* DM View Styles */
+        .dm-login {
+            max-width: 500px;
+            margin: 50px auto;
+            padding: 30px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            text-align: center;
+        }
+        
+        .dm-login h2 {
+            color: var(--dark-leather);
+            margin-bottom: 20px;
+        }
+        
+        .password-input {
+            width: 100%;
+            padding: 12px;
+            margin: 15px 0;
+            border: 2px solid var(--light-leather);
+            border-radius: 4px;
+            font-size: 1.1rem;
+        }
+        
+        .btn {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: bold;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .btn-primary {
+            background: var(--dark-leather);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: var(--light-leather);
+        }
+        
+        .btn-danger {
+            background: var(--red);
+            color: white;
+        }
+        
+        .btn-danger:hover {
+            background: #a00;
+        }
+        
+        .btn-success {
+            background: var(--green);
+            color: white;
+        }
+        
+        .btn-success:hover {
+            background: #005a00;
+        }
+        
+        .btn-purple {
+            background: var(--purple);
+            color: white;
+        }
+        
+        .btn-purple:hover {
+            background: #3a0069;
+        }
+        
+        .dm-controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 20px;
+            padding: 15px;
+            background: rgba(139, 69, 19, 0.1);
+            border-radius: 5px;
+        }
+        
+        .monster-form {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: var(--dark-leather);
+        }
+        
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #aaa;
+            border-radius: 4px;
+            font-family: inherit;
+        }
+        
+        .image-preview {
+            width: 100%;
+            height: 200px;
+            background-color: #eee;
+            background-position: center;
+            background-size: contain;
+            background-repeat: no-repeat;
+            border: 1px dashed #aaa;
+            border-radius: 4px;
+            margin-top: 10px;
+        }
+        
+        .stage-controls {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .stage-set-by-id {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            background: rgba(139, 69, 19, 0.1);
+            padding: 15px;
+            border-radius: 8px;
+        }
+        
+        .stage-set-by-id input {
+            width: 100px;
+            padding: 8px;
+            border: 1px solid #aaa;
+            border-radius: 4px;
+        }
+        
+        .stage-buttons {
+            display: flex;
+            gap: 10px;
+        }
+        
+        /* File Management */
+        .file-management {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 20px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        .file-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .btn-icon {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .modal-content {
+            background: var(--parchment);
+            padding: 30px;
+            border-radius: 10px;
+            border: 3px solid var(--gold);
+            max-width: 500px;
+            width: 90%;
+            text-align: center;
+            position: relative;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.9);
+        }
+        
+        .modal h3 {
+            color: var(--dark-leather);
+            margin-bottom: 20px;
+            font-size: 1.8rem;
+        }
+        
+        .modal p {
+            margin-bottom: 20px;
+            font-size: 1.2rem;
+            line-height: 1.5;
+        }
+        
+        .modal-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .modal-btn {
+            padding: 10px 25px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+        
+        .modal-btn.confirm {
+            background: var(--green);
+            color: white;
+        }
+        
+        .modal-btn.confirm:hover {
+            background: #005a00;
+        }
+        
+        .modal-btn.cancel {
+            background: var(--red);
+            color: white;
+        }
+        
+        .modal-btn.cancel:hover {
+            background: #a00;
+        }
+        
+        /* Status messages */
+        .status-message {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+            text-align: center;
+            font-weight: bold;
+        }
+        
+        .success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        /* Footer */
+        .footer {
+            text-align: center;
+            padding: 20px;
+            margin-top: 20px;
+            color: #666;
+            font-size: 0.9rem;
+            border-top: 1px solid #ddd;
+        }
+        
+        @media (max-width: 768px) {
+            .monster-grid {
+                grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            }
+            
+            .tabs {
+                flex-direction: column;
+            }
+            
+            .tab {
+                border-right: none;
+                border-bottom: 1px solid rgba(0, 0, 0, 0.3);
+            }
+            
+            .player-controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .search-container {
+                max-width: none;
+            }
+            
+            .dm-controls {
+                flex-direction: column;
+            }
+            
+            .stage-set-by-id {
+                flex-wrap: wrap;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <div class="header">
+            <h1><i class="fas fa-dragon"></i> D&D Monster Bestiary</h1>
+            <p>Track your encounters and uncover monster secrets</p>
+        </div>
+        
+        <div class="tabs">
+            <div class="tab active" data-tab="player">
+                <i class="fas fa-dragon"></i> Player View
+            </div>
+            <div class="tab" data-tab="dm">
+                <i class="fas fa-scroll"></i> Dungeon Master
+            </div>
+        </div>
+        
+        <div class="content">
+            <!-- Player View -->
+            <div class="tab-content active" id="player-tab">
+                <div class="player-controls">
+                    <div>
+                        <button class="btn btn-primary" id="export-save">
+                            <i class="fas fa-download"></i> Export Save
+                        </button>
+                        <button class="btn btn-success" id="import-save">
+                            <i class="fas fa-upload"></i> Import Save
+                        </button>
+                    </div>
+                    
+                    <div class="search-container">
+                        <input type="text" id="player-search" placeholder="Search by number or name...">
+                        <button class="btn btn-purple" id="search-btn"><i class="fas fa-search"></i> Search</button>
+                    </div>
+                    
+                    <div>
+                        <span id="save-status">Autosave: On</span>
+                    </div>
+                </div>
+                
+                <div id="player-status" class="status-message"></div>
+                
+                <div class="monster-grid" id="monster-list">
+                    <!-- Monster cards will be generated here -->
+                </div>
+            </div>
+            
+            <!-- DM View -->
+            <div class="tab-content" id="dm-tab">
+                <div id="dm-login-section">
+                    <div class="dm-login">
+                        <h2><i class="fas fa-lock"></i> Dungeon Master Access</h2>
+                        <p>Enter your DM password to access the bestiary controls</p>
+                        <input type="password" class="password-input" id="dm-password" placeholder="Enter password...">
+                        <button class="btn btn-primary" id="login-btn">Enter DM Mode</button>
+                    </div>
+                </div>
+                
+                <div id="dm-controls-section" style="display: none;">
+                    <div id="dm-status" class="status-message"></div>
+                    
+                    <div class="dm-controls">
+                        <button class="btn btn-primary" id="add-monster-btn">
+                            <i class="fas fa-plus"></i> Add Monster
+                        </button>
+                        <button class="btn btn-success" id="export-monsters">
+                            <i class="fas fa-download"></i> Export Monsters
+                        </button>
+                        <button class="btn btn-success" id="import-monsters">
+                            <i class="fas fa-upload"></i> Import Monsters
+                        </button>
+                        <button class="btn btn-purple" id="export-player-save">
+                            <i class="fas fa-user"></i> Export Player Save
+                        </button>
+                    </div>
+                    
+                    <div class="monster-form">
+                        <h2 id="form-title"><i class="fas fa-pen"></i> Add New Monster</h2>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label for="monster-name"><i class="fas fa-heading"></i> Monster Name</label>
+                                <input type="text" id="monster-name" placeholder="e.g., Owlbear">
+                            </div>
+                            <div class="form-group">
+                                <label for="monster-type"><i class="fas fa-tag"></i> Type</label>
+                                <select id="monster-type">
+                                    <option value="Aberration">Aberration</option>
+                                    <option value="Beast">Beast</option>
+                                    <option value="Celestial">Celestial</option>
+                                    <option value="Construct">Construct</option>
+                                    <option value="Dragon">Dragon</option>
+                                    <option value="Elemental">Elemental</option>
+                                    <option value="Fey">Fey</option>
+                                    <option value="Fiend">Fiend</option>
+                                    <option value="Giant">Giant</option>
+                                    <option value="Humanoid">Humanoid</option>
+                                    <option value="Monstrosity">Monstrosity</option>
+                                    <option value="Ooze">Ooze</option>
+                                    <option value="Plant">Plant</option>
+                                    <option value="Undead">Undead</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="danger-level"><i class="fas fa-skull"></i> Danger Level</label>
+                                <select id="danger-level">
+                                    <option value="Low">Low</option>
+                                    <option value="Medium">Medium</option>
+                                    <option value="High">High</option>
+                                    <option value="Deadly">Deadly</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="default-stage"><i class="fas fa-eye"></i> Default Stage</label>
+                                <select id="default-stage">
+                                    <option value="0">0 - Unknown</option>
+                                    <option value="1">1 - Seen</option>
+                                    <option value="2">2 - Researched</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="dm-secrets"><i class="fas fa-key"></i> DM Secrets</label>
+                            <textarea id="dm-secrets" placeholder="Hidden information about this monster..." rows="3"></textarea>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="monster-image"><i class="fas fa-image"></i> Monster Image</label>
+                            <input type="file" id="monster-image" accept="image/*">
+                            <div class="image-preview" id="image-preview"></div>
+                        </div>
+                        
+                        <div class="form-buttons">
+                            <button class="btn btn-primary" id="save-monster"><i class="fas fa-save"></i> Save Monster</button>
+                            <button class="btn btn-danger" id="cancel-monster" style="display: none;"><i class="fas fa-times"></i> Cancel</button>
+                        </div>
+                    </div>
+                    
+                    <div class="monster-grid" id="dm-monster-list">
+                        <!-- DM monster cards will be generated here -->
+                    </div>
+                    
+                    <div class="file-management">
+                        <h3><i class="fas fa-cogs"></i> Stage Management</h3>
+                        
+                        <div class="stage-controls">
+                            <div class="stage-set-by-id">
+                                <div>
+                                    <label>Set Stage by Monster #</label>
+                                    <input type="number" id="monster-id-input" min="1" placeholder="Enter ID">
+                                </div>
+                                <select id="stage-select">
+                                    <option value="0">Unknown</option>
+                                    <option value="1">Seen</option>
+                                    <option value="2">Researched</option>
+                                </select>
+                                <button class="btn btn-primary" id="set-stage-btn">Set Stage</button>
+                            </div>
+                            
+                            <p>Or select monsters to change their discovery stage:</p>
+                            <div class="stage-buttons">
+                                <button class="btn" data-stage="0">Set to Unknown</button>
+                                <button class="btn" data-stage="1">Set to Seen</button>
+                                <button class="btn" data-stage="2">Set to Researched</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p>D&D Bestiary App - All data is stored locally in your browser</p>
+            <p>Works offline - Save files can be exported for sharing</p>
+        </div>
+    </div>
+    
+    <!-- Modal for stage confirmation -->
+    <div class="modal" id="stage-confirm-modal">
+        <div class="modal-content">
+            <h3><i class="fas fa-exclamation-circle"></i> Confirm Stage Change</h3>
+            <p id="modal-message">Are you sure you want to advance this monster to the next stage?</p>
+            <div class="modal-buttons">
+                <button class="modal-btn confirm" id="confirm-stage-btn">Yes, Advance</button>
+                <button class="modal-btn cancel" id="cancel-stage-btn">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Initial data for monsters and player progress
+        const initialMonsters = [
+            {
+                id: 1,
+                name: "Basilisk",
+                image: "",
+                type: "Monstrosity",
+                dangerLevel: "High",
+                dmSecrets: "Basilisks can turn creatures to stone with their gaze. Their blood has alchemical properties and can be used to create potions of stone to flesh.",
+                defaultStage: 0
+            },
+            {
+                id: 2,
+                name: "Owlbear",
+                image: "",
+                type: "Monstrosity",
+                dangerLevel: "Medium",
+                dmSecrets: "Owlbears are fiercely territorial. They can be temporarily calmed by offering them shiny objects, which they hoard in their nests.",
+                defaultStage: 0
+            },
+            {
+                id: 3,
+                name: "Gelatinous Cube",
+                image: "",
+                type: "Ooze",
+                dangerLevel: "Medium",
+                dmSecrets: "Gelatinous cubes are nearly transparent and often occupy dungeon corridors. They dissolve organic matter but leave metal and coins behind.",
+                defaultStage: 0
+            },
+            {
+                id: 4,
+                name: "Displacer Beast",
+                image: "",
+                type: "Monstrosity",
+                dangerLevel: "High",
+                dmSecrets: "Displacer beasts project a false image of themselves a few feet away from their actual position. They hate blink dogs and will hunt them relentlessly.",
+                defaultStage: 0
+            }
+        ];
+        
+        const initialProgress = [
+            { id: 1, stage: 1, notes: "Encountered in the caves beneath Castle Rend." },
+            { id: 2, stage: 0, notes: "" },
+            { id: 3, stage: 0, notes: "" },
+            { id: 4, stage: 0, notes: "" }
+        ];
+        
+        // Silhouette image for unknown monsters
+        const silhouetteImage = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0MDAiIGhlaWdodD0iNDAwIiB2aWV3Qm94PSIwIDAgMjQgMjQiIGZpbGw9ImJsYWNrIj48cGF0aCBkPSJNMTIgMkM2LjQ4IDIgMiA2LjQ4IDIgMTJzNC40OCAxMCAxMCAxMCAxMC00LjQ4IDEwLTEwUzE3LjUyIDIgMTIgMnptMCAzYzEuNjYgMCAzIDEuMzQgMyAzaC02YzAtMS42NiAxLjM0LTMgMy0zem0wIDE1LjVjLTIuNSAwLTQuNS0yLTQuNS00LjVoOWMwIDIuNS0yIDQuNS00LjUgNC41eiIvPjwvc3ZnPg==';
+        
+        // State management
+        let monsters = [];
+        let progress = [];
+        let dmModeActive = false;
+        let editingMonsterId = null;
+        let currentStageChange = { id: null, newStage: null };
+        
+        // DOM Elements
+        const monsterList = document.getElementById('monster-list');
+        const dmMonsterList = document.getElementById('dm-monster-list');
+        const dmLoginSection = document.getElementById('dm-login-section');
+        const dmControlsSection = document.getElementById('dm-controls-section');
+        const tabs = document.querySelectorAll('.tab');
+        const tabContents = document.querySelectorAll('.tab-content');
+        const modal = document.getElementById('stage-confirm-modal');
+        const modalMessage = document.getElementById('modal-message');
+        const playerSearch = document.getElementById('player-search');
+        const playerStatus = document.getElementById('player-status');
+        const dmStatus = document.getElementById('dm-status');
+        
+        // Initialize the app
+        function initApp() {
+            loadData();
+            renderPlayerMonsters();
+            setupEventListeners();
+        }
+        
+        // Load data from localStorage or initialize
+        function loadData() {
+            const savedMonsters = localStorage.getItem('monsters');
+            const savedProgress = localStorage.getItem('progress');
+            const dmPassword = localStorage.getItem('dmPassword');
+            
+            monsters = savedMonsters ? JSON.parse(savedMonsters) : initialMonsters;
+            progress = savedProgress ? JSON.parse(savedProgress) : initialProgress;
+            
+            // If no password is set, set a default one
+            if (!dmPassword) {
+                localStorage.setItem('dmPassword', 'dungeonmaster');
+            }
+        }
+        
+        // Save data to localStorage
+        function saveData() {
+            localStorage.setItem('monsters', JSON.stringify(monsters));
+            localStorage.setItem('progress', JSON.stringify(progress));
+            
+            // Update save status indicator
+            const now = new Date();
+            document.getElementById('save-status').textContent = 
+                `Last saved: ${now.toLocaleTimeString()}`;
+        }
+        
+        // Render monsters for player view
+        function renderPlayerMonsters(searchTerm = '') {
+            monsterList.innerHTML = '';
+            
+            let filteredMonsters = monsters;
+            
+            // Filter monsters based on search term
+            if (searchTerm) {
+                const term = searchTerm.toLowerCase().trim();
+                filteredMonsters = monsters.filter(monster => {
+                    const monsterProgress = progress.find(p => p.id === monster.id) || 
+                                           { id: monster.id, stage: monster.defaultStage, notes: '' };
+                    
+                    // Search by number
+                    if (monster.id.toString().includes(term)) {
+                        return true;
+                    }
+                    
+                    // Search by name if monster is at least seen (stage 1+)
+                    if (monsterProgress.stage > 0 && monster.name.toLowerCase().includes(term)) {
+                        return true;
+                    }
+                    
+                    return false;
+                });
+            }
+            
+            filteredMonsters.forEach(monster => {
+                const monsterProgress = progress.find(p => p.id === monster.id) || 
+                                       { id: monster.id, stage: monster.defaultStage, notes: '' };
+                
+                const card = document.createElement('div');
+                card.className = 'monster-card';
+                
+                let nameContent = '';
+                let imageStyle = '';
+                let notesContent = '';
+                let secretsContent = '';
+                
+                // Stage 0: Unknown
+                if (monsterProgress.stage === 0) {
+                    nameContent = `<div class="monster-name hidden-name">#########</div>`;
+                    imageStyle = `background-image: url('${silhouetteImage}'); filter: brightness(0.1);`;
+                } 
+                // Stage 1: Seen
+                else if (monsterProgress.stage === 1) {
+                    nameContent = `<div class="monster-name">${monster.name}</div>`;
+                    imageStyle = `background-image: url('${monster.image || silhouetteImage}')`;
+                    notesContent = `
+                        <div class="notes-section">
+                            <h4>Notes</h4>
+                            <textarea class="notes-textarea" data-id="${monster.id}">${monsterProgress.notes || ''}</textarea>
+                        </div>
+                    `;
+                } 
+                // Stage 2: Researched
+                else if (monsterProgress.stage === 2) {
+                    nameContent = `<div class="monster-name">${monster.name}</div>`;
+                    imageStyle = `background-image: url('${monster.image || silhouetteImage}')`;
+                    notesContent = `
+                        <div class="notes-section">
+                            <h4>Notes</h4>
+                            <textarea class="notes-textarea" data-id="${monster.id}">${monsterProgress.notes || ''}</textarea>
+                        </div>
+                    `;
+                    secretsContent = `
+                        <div class="dm-secrets">
+                            <h4>DM Secrets</h4>
+                            <p>${monster.dmSecrets}</p>
+                        </div>
+                    `;
+                }
+                
+                // Danger level indicator
+                let dangerClass = '';
+                if (monster.dangerLevel === 'Low') dangerClass = 'low-danger';
+                else if (monster.dangerLevel === 'Medium') dangerClass = 'medium-danger';
+                else if (monster.dangerLevel === 'High') dangerClass = 'high-danger';
+                else if (monster.dangerLevel === 'Deadly') dangerClass = 'deadly-danger';
+                
+                card.innerHTML = `
+                    <div class="monster-number">#${monster.id}</div>
+                    <div class="monster-image" style="${imageStyle}"></div>
+                    ${nameContent}
+                    <div class="monster-type">${monsterProgress.stage > 0 ? monster.type : 'Unknown'}</div>
+                    <div class="danger-level ${dangerClass}">${monsterProgress.stage > 0 ? monster.dangerLevel : '???'}</div>
+                    ${notesContent}
+                    ${secretsContent}
+                `;
+                
+                monsterList.appendChild(card);
+            });
+            
+            // Add event listeners to note textareas
+            document.querySelectorAll('.notes-textarea').forEach(textarea => {
+                textarea.addEventListener('input', function() {
+                    const id = parseInt(this.dataset.id);
+                    const monsterProgress = progress.find(p => p.id === id);
+                    if (monsterProgress) {
+                        monsterProgress.notes = this.value;
+                        saveData();
+                    }
+                });
+            });
+        }
+        
+        // Render monsters for DM view
+        function renderDMMonsters() {
+            dmMonsterList.innerHTML = '';
+            
+            monsters.forEach(monster => {
+                const monsterProgress = progress.find(p => p.id === monster.id) || 
+                                       { id: monster.id, stage: monster.defaultStage, notes: '' };
+                
+                const card = document.createElement('div');
+                card.className = 'monster-card';
+                card.dataset.id = monster.id;
+                
+                // Danger level indicator
+                let dangerClass = '';
+                if (monster.dangerLevel === 'Low') dangerClass = 'low-danger';
+                else if (monster.dangerLevel === 'Medium') dangerClass = 'medium-danger';
+                else if (monster.dangerLevel === 'High') dangerClass = 'high-danger';
+                else if (monster.dangerLevel === 'Deadly') dangerClass = 'deadly-danger';
+                
+                card.innerHTML = `
+                    <div class="monster-number">#${monster.id}</div>
+                    <div class="monster-image" style="background-image: url('${monster.image || silhouetteImage}')"></div>
+                    <div class="monster-name">${monster.name}</div>
+                    <div class="monster-type">${monster.type}</div>
+                    <div class="danger-level ${dangerClass}">${monster.dangerLevel}</div>
+                    <div class="stage-indicator">
+                        <strong>Player Stage:</strong> ${monsterProgress.stage}
+                    </div>
+                    <div class="monster-actions">
+                        <button class="btn btn-primary edit-btn" data-id="${monster.id}">
+                            <i class="fas fa-edit"></i> Edit
+                        </button>
+                        <button class="btn btn-danger delete-btn" data-id="${monster.id}">
+                            <i class="fas fa-trash"></i> Delete
+                        </button>
+                    </div>
+                `;
+                
+                dmMonsterList.appendChild(card);
+            });
+            
+            // Add event listeners to edit and delete buttons
+            document.querySelectorAll('.edit-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const id = parseInt(this.dataset.id);
+                    editMonster(id);
+                });
+            });
+            
+            document.querySelectorAll('.delete-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const id = parseInt(this.dataset.id);
+                    deleteMonster(id);
+                });
+            });
+        }
+        
+        // Setup event listeners
+        function setupEventListeners() {
+            // Tab switching
+            tabs.forEach(tab => {
+                tab.addEventListener('click', function() {
+                    const tabName = this.dataset.tab;
+                    
+                    // Update active tab
+                    tabs.forEach(t => t.classList.remove('active'));
+                    this.classList.add('active');
+                    
+                    // Show corresponding content
+                    tabContents.forEach(content => {
+                        content.classList.remove('active');
+                        if (content.id === `${tabName}-tab`) {
+                            content.classList.add('active');
+                        }
+                    });
+                });
+            });
+            
+            // DM Login
+            document.getElementById('login-btn').addEventListener('click', function() {
+                const password = document.getElementById('dm-password').value;
+                const storedPassword = localStorage.getItem('dmPassword');
+                
+                if (password === storedPassword) {
+                    dmModeActive = true;
+                    dmLoginSection.style.display = 'none';
+                    dmControlsSection.style.display = 'block';
+                    renderDMMonsters();
+                    dmStatus.textContent = "DM mode activated!";
+                    dmStatus.className = "status-message success";
+                    setTimeout(() => dmStatus.textContent = "", 3000);
+                } else {
+                    alert('Incorrect password. Please try again.');
+                }
+            });
+            
+            // Player Export Save
+            document.getElementById('export-save').addEventListener('click', exportPlayerSave);
+            
+            // Player Import Save
+            document.getElementById('import-save').addEventListener('click', function() {
+                const fileInput = document.createElement('input');
+                fileInput.type = 'file';
+                fileInput.accept = '.json';
+                fileInput.onchange = function(e) {
+                    const file = e.target.files[0];
+                    if (file) {
+                        const reader = new FileReader();
+                        reader.onload = function(event) {
+                            try {
+                                const data = JSON.parse(event.target.result);
+                                if (data.progress) {
+                                    progress = data.progress;
+                                    saveData();
+                                    renderPlayerMonsters();
+                                    playerStatus.textContent = "Player progress imported successfully!";
+                                    playerStatus.className = "status-message success";
+                                    setTimeout(() => playerStatus.textContent = "", 3000);
+                                } else {
+                                    playerStatus.textContent = "Invalid player save file format";
+                                    playerStatus.className = "status-message error";
+                                    setTimeout(() => playerStatus.textContent = "", 3000);
+                                }
+                            } catch (error) {
+                                playerStatus.textContent = "Error reading file: " + error.message;
+                                playerStatus.className = "status-message error";
+                                setTimeout(() => playerStatus.textContent = "", 3000);
+                            }
+                        };
+                        reader.readAsText(file);
+                    }
+                };
+                fileInput.click();
+            });
+            
+            // DM Export Monsters
+            document.getElementById('export-monsters').addEventListener('click', function() {
+                const data = { monsters: monsters };
+                const json = JSON.stringify(data, null, 2);
+                const blob = new Blob([json], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'dnd_bestiary_monsters.json';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                
+                dmStatus.textContent = "Monsters data exported successfully!";
+                dmStatus.className = "status-message success";
+                setTimeout(() => dmStatus.textContent = "", 3000);
+            });
+            
+            // DM Import Monsters
+            document.getElementById('import-monsters').addEventListener('click', function() {
+                const fileInput = document.createElement('input');
+                fileInput.type = 'file';
+                fileInput.accept = '.json';
+                fileInput.onchange = function(e) {
+                    const file = e.target.files[0];
+                    if (file) {
+                        const reader = new FileReader();
+                        reader.onload = function(event) {
+                            try {
+                                const data = JSON.parse(event.target.result);
+                                if (data.monsters && Array.isArray(data.monsters)) {
+                                    // Merge monsters - keep existing and add new ones
+                                    const existingIds = monsters.map(m => m.id);
+                                    let addedCount = 0;
+                                    
+                                    data.monsters.forEach(monster => {
+                                        if (!existingIds.includes(monster.id)) {
+                                            monsters.push(monster);
+                                            // Add progress for new monster
+                                            progress.push({
+                                                id: monster.id,
+                                                stage: monster.defaultStage,
+                                                notes: ""
+                                            });
+                                            addedCount++;
+                                        }
+                                    });
+                                    
+                                    saveData();
+                                    renderPlayerMonsters();
+                                    renderDMMonsters();
+                                    
+                                    dmStatus.textContent = `Imported ${addedCount} new monsters!`;
+                                    dmStatus.className = "status-message success";
+                                    setTimeout(() => dmStatus.textContent = "", 3000);
+                                } else {
+                                    dmStatus.textContent = "Invalid monsters file format";
+                                    dmStatus.className = "status-message error";
+                                    setTimeout(() => dmStatus.textContent = "", 3000);
+                                }
+                            } catch (error) {
+                                dmStatus.textContent = "Error reading file: " + error.message;
+                                dmStatus.className = "status-message error";
+                                setTimeout(() => dmStatus.textContent = "", 3000);
+                            }
+                        };
+                        reader.readAsText(file);
+                    }
+                };
+                fileInput.click();
+            });
+            
+            // DM Export Player Save
+            document.getElementById('export-player-save').addEventListener('click', exportPlayerSave);
+            
+            // DM Controls
+            document.getElementById('add-monster-btn').addEventListener('click', addNewMonster);
+            document.getElementById('save-monster').addEventListener('click', saveMonster);
+            document.getElementById('cancel-monster').addEventListener('click', cancelEdit);
+            
+            // Stage management by ID
+            document.getElementById('set-stage-btn').addEventListener('click', function() {
+                const id = parseInt(document.getElementById('monster-id-input').value);
+                const stage = parseInt(document.getElementById('stage-select').value);
+                
+                if (!id) {
+                    dmStatus.textContent = "Please enter a monster ID";
+                    dmStatus.className = "status-message error";
+                    setTimeout(() => dmStatus.textContent = "", 3000);
+                    return;
+                }
+                
+                const monster = monsters.find(m => m.id === id);
+                if (!monster) {
+                    dmStatus.textContent = `Monster #${id} not found!`;
+                    dmStatus.className = "status-message error";
+                    setTimeout(() => dmStatus.textContent = "", 3000);
+                    return;
+                }
+                
+                let monsterProgress = progress.find(p => p.id === id);
+                if (!monsterProgress) {
+                    monsterProgress = { id: id, stage: monster.defaultStage, notes: '' };
+                    progress.push(monsterProgress);
+                }
+                
+                monsterProgress.stage = stage;
+                saveData();
+                renderPlayerMonsters();
+                renderDMMonsters();
+                
+                dmStatus.textContent = `Set Monster #${id} to stage ${stage}`;
+                dmStatus.className = "status-message success";
+                setTimeout(() => dmStatus.textContent = "", 3000);
+            });
+            
+            // Stage management by selection
+            document.querySelectorAll('.stage-buttons button').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const stage = parseInt(this.dataset.stage);
+                    const selectedCards = document.querySelectorAll('.monster-card.selected');
+                    
+                    if (selectedCards.length === 0) {
+                        dmStatus.textContent = "Please select at least one monster card";
+                        dmStatus.className = "status-message error";
+                        setTimeout(() => dmStatus.textContent = "", 3000);
+                        return;
+                    }
+                    
+                    selectedCards.forEach(card => {
+                        const id = parseInt(card.dataset.id);
+                        const monsterProgress = progress.find(p => p.id === id);
+                        if (monsterProgress) {
+                            monsterProgress.stage = stage;
+                        }
+                    });
+                    
+                    saveData();
+                    renderPlayerMonsters();
+                    renderDMMonsters();
+                    
+                    dmStatus.textContent = `Updated ${selectedCards.length} monster(s) to stage ${stage}`;
+                    dmStatus.className = "status-message success";
+                    setTimeout(() => dmStatus.textContent = "", 3000);
+                });
+            });
+            
+            // Add selection to DM monster cards
+            dmMonsterList.addEventListener('click', function(e) {
+                if (e.target.closest('.monster-card')) {
+                    const card = e.target.closest('.monster-card');
+                    card.classList.toggle('selected');
+                }
+            });
+            
+            // Search functionality
+            playerSearch.addEventListener('keyup', function(e) {
+                if (e.key === 'Enter') {
+                    renderPlayerMonsters(this.value);
+                }
+            });
+            
+            document.getElementById('search-btn').addEventListener('click', function() {
+                renderPlayerMonsters(playerSearch.value);
+            });
+            
+            // Handle image upload and preview
+            document.getElementById('monster-image').addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                if (!file) return;
+                
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    document.getElementById('image-preview').style.backgroundImage = `url('${event.target.result}')`;
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+        
+        // Add a new monster
+        function addNewMonster() {
+            editingMonsterId = null;
+            document.getElementById('form-title').textContent = 'Add New Monster';
+            document.getElementById('monster-name').value = '';
+            document.getElementById('monster-type').value = 'Beast';
+            document.getElementById('danger-level').value = 'Medium';
+            document.getElementById('default-stage').value = '0';
+            document.getElementById('dm-secrets').value = '';
+            document.getElementById('monster-image').value = '';
+            document.getElementById('image-preview').style.backgroundImage = '';
+            document.getElementById('cancel-monster').style.display = 'none';
+            
+            dmStatus.textContent = "Adding a new monster...";
+            dmStatus.className = "status-message";
+        }
+        
+        // Edit an existing monster
+        function editMonster(id) {
+            const monster = monsters.find(m => m.id === id);
+            if (!monster) return;
+            
+            editingMonsterId = id;
+            document.getElementById('form-title').textContent = `Edit ${monster.name}`;
+            document.getElementById('monster-name').value = monster.name;
+            document.getElementById('monster-type').value = monster.type;
+            document.getElementById('danger-level').value = monster.dangerLevel;
+            document.getElementById('default-stage').value = monster.defaultStage;
+            document.getElementById('dm-secrets').value = monster.dmSecrets;
+            document.getElementById('monster-image').value = '';
+            document.getElementById('image-preview').style.backgroundImage = monster.image ? `url('${monster.image}')` : '';
+            document.getElementById('cancel-monster').style.display = 'inline-block';
+            
+            // Scroll to form
+            document.querySelector('.monster-form').scrollIntoView({ behavior: 'smooth' });
+            
+            dmStatus.textContent = `Editing ${monster.name}...`;
+            dmStatus.className = "status-message";
+        }
+        
+        // Save monster (new or edited)
+        function saveMonster() {
+            const name = document.getElementById('monster-name').value.trim();
+            const type = document.getElementById('monster-type').value;
+            const dangerLevel = document.getElementById('danger-level').value;
+            const defaultStage = parseInt(document.getElementById('default-stage').value);
+            const dmSecrets = document.getElementById('dm-secrets').value;
+            const imagePreview = document.getElementById('image-preview');
+            const image = imagePreview.style.backgroundImage.slice(5, -2); // Extract URL
+            
+            if (!name) {
+                dmStatus.textContent = "Please enter a monster name";
+                dmStatus.className = "status-message error";
+                return;
+            }
+            
+            if (editingMonsterId === null) {
+                // Add new monster
+                const newId = monsters.length > 0 ? Math.max(...monsters.map(m => m.id)) + 1 : 1;
+                const newMonster = {
+                    id: newId,
+                    name,
+                    image,
+                    type,
+                    dangerLevel,
+                    dmSecrets,
+                    defaultStage
+                };
+                
+                monsters.push(newMonster);
+                progress.push({ id: newId, stage: defaultStage, notes: '' });
+                
+                dmStatus.textContent = `Added new monster: ${name}!`;
+                dmStatus.className = "status-message success";
+            } else {
+                // Update existing monster
+                const monsterIndex = monsters.findIndex(m => m.id === editingMonsterId);
+                if (monsterIndex !== -1) {
+                    monsters[monsterIndex] = {
+                        ...monsters[monsterIndex],
+                        name,
+                        type,
+                        dangerLevel,
+                        dmSecrets,
+                        defaultStage,
+                        image: image || monsters[monsterIndex].image
+                    };
+                    
+                    dmStatus.textContent = `Updated monster: ${name}!`;
+                    dmStatus.className = "status-message success";
+                }
+            }
+            
+            saveData();
+            renderPlayerMonsters(playerSearch.value);
+            renderDMMonsters();
+            
+            // Reset form
+            editingMonsterId = null;
+            document.getElementById('form-title').textContent = 'Add New Monster';
+            document.getElementById('monster-name').value = '';
+            document.getElementById('monster-type').value = 'Beast';
+            document.getElementById('danger-level').value = 'Medium';
+            document.getElementById('default-stage').value = '0';
+            document.getElementById('dm-secrets').value = '';
+            document.getElementById('monster-image').value = '';
+            document.getElementById('image-preview').style.backgroundImage = '';
+            document.getElementById('cancel-monster').style.display = 'none';
+            
+            setTimeout(() => dmStatus.textContent = "", 3000);
+        }
+        
+        // Cancel edit
+        function cancelEdit() {
+            editingMonsterId = null;
+            document.getElementById('form-title').textContent = 'Add New Monster';
+            document.getElementById('monster-name').value = '';
+            document.getElementById('monster-type').value = 'Beast';
+            document.getElementById('danger-level').value = 'Medium';
+            document.getElementById('default-stage').value = '0';
+            document.getElementById('dm-secrets').value = '';
+            document.getElementById('monster-image').value = '';
+            document.getElementById('image-preview').style.backgroundImage = '';
+            document.getElementById('cancel-monster').style.display = 'none';
+            
+            dmStatus.textContent = "Edit canceled";
+            dmStatus.className = "status-message";
+            setTimeout(() => dmStatus.textContent = "", 3000);
+        }
+        
+        // Delete a monster
+        function deleteMonster(id) {
+            if (!confirm('Are you sure you want to delete this monster? This cannot be undone.')) {
+                return;
+            }
+            
+            const monster = monsters.find(m => m.id === id);
+            monsters = monsters.filter(m => m.id !== id);
+            progress = progress.filter(p => p.id !== id);
+            
+            saveData();
+            renderPlayerMonsters(playerSearch.value);
+            renderDMMonsters();
+            
+            dmStatus.textContent = `Deleted monster: ${monster.name}!`;
+            dmStatus.className = "status-message success";
+            setTimeout(() => dmStatus.textContent = "", 3000);
+        }
+        
+        // Export player save file
+        function exportPlayerSave() {
+            const data = {
+                progress: progress
+            };
+            
+            const json = JSON.stringify(data, null, 2);
+            const blob = new Blob([json], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'dnd_bestiary_player_save.json';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            
+            const statusElement = dmModeActive ? dmStatus : playerStatus;
+            statusElement.textContent = "Player save exported successfully!";
+            statusElement.className = "status-message success";
+            setTimeout(() => statusElement.textContent = "", 3000);
+        }
+        
+        // Initialize the app when the page loads
+        window.addEventListener('DOMContentLoaded', initApp);
+    </script>
+</body>
+</html>
