@@ -6,6 +6,13 @@
     <title>D&D Monster Bestiary</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
         :root {
             --parchment: #f5e9c9;
             --dark-leather: #3a2618;
@@ -17,15 +24,8 @@
             --purple: #4b0082;
         }
         
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: 'Times New Roman', serif;
-        }
-        
         body {
-            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"><rect width="100" height="100" fill="%233a2618"/><path d="M0 0L100 100M100 0L0 100" stroke="%2326180f" stroke-width="1"/></svg>');
+            background: linear-gradient(135deg, #1a0f0b 0%, #2c1a12 100%);
             padding: 20px;
             min-height: 100vh;
             color: #333;
@@ -71,6 +71,7 @@
             font-size: 2.5rem;
             letter-spacing: 3px;
             text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+            font-family: 'Cinzel', serif;
         }
         
         .header p {
@@ -163,9 +164,15 @@
             border-radius: 8px;
             padding: 15px;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-            transition: transform 0.3s;
+            transition: all 0.3s;
             position: relative;
             overflow: hidden;
+            animation: fadeIn 0.5s ease-out;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
         }
         
         .monster-card:hover {
@@ -348,15 +355,6 @@
             background: var(--light-leather);
         }
         
-        .btn-danger {
-            background: var(--red);
-            color: white;
-        }
-        
-        .btn-danger:hover {
-            background: #a00;
-        }
-        
         .btn-success {
             background: var(--green);
             color: white;
@@ -373,6 +371,15 @@
         
         .btn-purple:hover {
             background: #3a0069;
+        }
+        
+        .btn-danger {
+            background: var(--red);
+            color: white;
+        }
+        
+        .btn-danger:hover {
+            background: #a00;
         }
         
         .dm-controls {
@@ -460,26 +467,68 @@
             gap: 10px;
         }
         
-        /* File Management */
-        .file-management {
-            background: white;
+        /* Status messages */
+        .status-message {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+            text-align: center;
+            font-weight: bold;
+        }
+        
+        .success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        /* Footer */
+        .footer {
+            text-align: center;
             padding: 20px;
-            border-radius: 8px;
             margin-top: 20px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            color: #666;
+            font-size: 0.9rem;
+            border-top: 1px solid #ddd;
         }
         
-        .file-buttons {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-            margin-top: 15px;
+        /* Stage buttons */
+        .stage-btn {
+            padding: 8px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s;
         }
         
-        .btn-icon {
-            display: flex;
-            align-items: center;
-            gap: 8px;
+        .stage-btn.next {
+            background: var(--green);
+            color: white;
+        }
+        
+        .stage-btn.prev {
+            background: var(--blue);
+            color: white;
+        }
+        
+        .stage-btn.next:hover {
+            background: #005a00;
+        }
+        
+        .stage-btn.prev:hover {
+            background: #0a2a4d;
+        }
+        
+        .stage-btn.disabled {
+            background: #ccc;
+            cursor: not-allowed;
         }
         
         /* Modal */
@@ -554,37 +603,7 @@
             background: #a00;
         }
         
-        /* Status messages */
-        .status-message {
-            padding: 10px;
-            margin: 10px 0;
-            border-radius: 4px;
-            text-align: center;
-            font-weight: bold;
-        }
-        
-        .success {
-            background: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
-        }
-        
-        .error {
-            background: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f5c6cb;
-        }
-        
-        /* Footer */
-        .footer {
-            text-align: center;
-            padding: 20px;
-            margin-top: 20px;
-            color: #666;
-            font-size: 0.9rem;
-            border-top: 1px solid #ddd;
-        }
-        
+        /* Responsive design */
         @media (max-width: 768px) {
             .monster-grid {
                 grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
@@ -615,8 +634,14 @@
             .stage-set-by-id {
                 flex-wrap: wrap;
             }
+            
+            .stage-control {
+                flex-direction: column;
+                gap: 10px;
+            }
         }
     </style>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700&display=swap" rel="stylesheet">
 </head>
 <body>
     <div class="app-container">
@@ -644,6 +669,9 @@
                         </button>
                         <button class="btn btn-success" id="import-save">
                             <i class="fas fa-upload"></i> Import Save
+                        </button>
+                        <button class="btn btn-purple" id="import-monsters-player">
+                            <i class="fas fa-file-import"></i> Import Monsters
                         </button>
                     </div>
                     
@@ -948,11 +976,18 @@
                 let imageStyle = '';
                 let notesContent = '';
                 let secretsContent = '';
+                let stageControls = '';
                 
                 // Stage 0: Unknown
                 if (monsterProgress.stage === 0) {
                     nameContent = `<div class="monster-name hidden-name">#########</div>`;
                     imageStyle = `background-image: url('${silhouetteImage}'); filter: brightness(0.1);`;
+                    stageControls = `
+                        <div class="stage-control">
+                            <button class="stage-btn disabled prev">Unknown</button>
+                            <button class="stage-btn next" data-id="${monster.id}" data-stage="1">Advance to Seen</button>
+                        </div>
+                    `;
                 } 
                 // Stage 1: Seen
                 else if (monsterProgress.stage === 1) {
@@ -962,6 +997,12 @@
                         <div class="notes-section">
                             <h4>Notes</h4>
                             <textarea class="notes-textarea" data-id="${monster.id}">${monsterProgress.notes || ''}</textarea>
+                        </div>
+                    `;
+                    stageControls = `
+                        <div class="stage-control">
+                            <button class="stage-btn prev" data-id="${monster.id}" data-stage="0">Set to Unknown</button>
+                            <button class="stage-btn next" data-id="${monster.id}" data-stage="2">Advance to Researched</button>
                         </div>
                     `;
                 } 
@@ -981,6 +1022,12 @@
                             <p>${monster.dmSecrets}</p>
                         </div>
                     `;
+                    stageControls = `
+                        <div class="stage-control">
+                            <button class="stage-btn prev" data-id="${monster.id}" data-stage="1">Set to Seen</button>
+                            <button class="stage-btn disabled next">Researched</button>
+                        </div>
+                    `;
                 }
                 
                 // Danger level indicator
@@ -998,6 +1045,7 @@
                     <div class="danger-level ${dangerClass}">${monsterProgress.stage > 0 ? monster.dangerLevel : '???'}</div>
                     ${notesContent}
                     ${secretsContent}
+                    ${stageControls}
                 `;
                 
                 monsterList.appendChild(card);
@@ -1012,6 +1060,28 @@
                         monsterProgress.notes = this.value;
                         saveData();
                     }
+                });
+            });
+            
+            // Add event listeners to stage buttons
+            document.querySelectorAll('.stage-btn.next:not(.disabled), .stage-btn.prev:not(.disabled)').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const id = parseInt(this.dataset.id);
+                    const newStage = parseInt(this.dataset.stage);
+                    
+                    // Get the monster name for confirmation message
+                    const monster = monsters.find(m => m.id === id);
+                    const monsterName = monster ? monster.name : `Monster #${id}`;
+                    const stageName = newStage === 0 ? "Unknown" : newStage === 1 ? "Seen" : "Researched";
+                    
+                    // Set current stage change and show confirmation modal
+                    currentStageChange = { id, newStage };
+                    modalMessage.innerHTML = `
+                        Are you sure you want to set <strong>${monsterName}</strong> to <strong>${stageName}</strong>?
+                        <br><br>
+                        This will ${newStage === 2 ? "reveal DM secrets" : newStage === 1 ? "reveal the monster's name and image" : "hide all information"}.
+                    `;
+                    modal.style.display = 'flex';
                 });
             });
         }
@@ -1136,6 +1206,59 @@
                                     setTimeout(() => playerStatus.textContent = "", 3000);
                                 } else {
                                     playerStatus.textContent = "Invalid player save file format";
+                                    playerStatus.className = "status-message error";
+                                    setTimeout(() => playerStatus.textContent = "", 3000);
+                                }
+                            } catch (error) {
+                                playerStatus.textContent = "Error reading file: " + error.message;
+                                playerStatus.className = "status-message error";
+                                setTimeout(() => playerStatus.textContent = "", 3000);
+                            }
+                        };
+                        reader.readAsText(file);
+                    }
+                };
+                fileInput.click();
+            });
+            
+            // Player Import Monsters
+            document.getElementById('import-monsters-player').addEventListener('click', function() {
+                const fileInput = document.createElement('input');
+                fileInput.type = 'file';
+                fileInput.accept = '.json';
+                fileInput.onchange = function(e) {
+                    const file = e.target.files[0];
+                    if (file) {
+                        const reader = new FileReader();
+                        reader.onload = function(event) {
+                            try {
+                                const data = JSON.parse(event.target.result);
+                                if (data.monsters && Array.isArray(data.monsters)) {
+                                    // Merge monsters - keep existing and add new ones
+                                    const existingIds = monsters.map(m => m.id);
+                                    let addedCount = 0;
+                                    
+                                    data.monsters.forEach(monster => {
+                                        if (!existingIds.includes(monster.id)) {
+                                            monsters.push(monster);
+                                            // Add progress for new monster
+                                            progress.push({
+                                                id: monster.id,
+                                                stage: monster.defaultStage,
+                                                notes: ""
+                                            });
+                                            addedCount++;
+                                        }
+                                    });
+                                    
+                                    saveData();
+                                    renderPlayerMonsters();
+                                    
+                                    playerStatus.textContent = `Imported ${addedCount} new monsters!`;
+                                    playerStatus.className = "status-message success";
+                                    setTimeout(() => playerStatus.textContent = "", 3000);
+                                } else {
+                                    playerStatus.textContent = "Invalid monsters file format";
                                     playerStatus.className = "status-message error";
                                     setTimeout(() => playerStatus.textContent = "", 3000);
                                 }
@@ -1329,6 +1452,30 @@
                     document.getElementById('image-preview').style.backgroundImage = `url('${event.target.result}')`;
                 };
                 reader.readAsDataURL(file);
+            });
+            
+            // Modal buttons
+            document.getElementById('confirm-stage-btn').addEventListener('click', function() {
+                if (currentStageChange.id) {
+                    let monsterProgress = progress.find(p => p.id === currentStageChange.id);
+                    if (monsterProgress) {
+                        monsterProgress.stage = currentStageChange.newStage;
+                        saveData();
+                        renderPlayerMonsters(playerSearch.value);
+                    }
+                }
+                modal.style.display = 'none';
+            });
+            
+            document.getElementById('cancel-stage-btn').addEventListener('click', function() {
+                modal.style.display = 'none';
+            });
+            
+            // Close modal when clicking outside
+            window.addEventListener('click', function(e) {
+                if (e.target === modal) {
+                    modal.style.display = 'none';
+                }
             });
         }
         
