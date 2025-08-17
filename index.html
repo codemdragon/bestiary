@@ -22,6 +22,8 @@
             --green: #006400;
             --blue: #0d3b66;
             --purple: #4b0082;
+            --legendary: #6a0dad;
+            --mythical: #8b0000;
         }
         
         body {
@@ -194,6 +196,7 @@
             justify-content: center;
             font-weight: bold;
             font-size: 0.9rem;
+            z-index: 10;
         }
         
         .monster-image {
@@ -206,6 +209,7 @@
             margin: 10px 0;
             border: 1px solid #aaa;
             border-radius: 4px;
+            position: relative;
         }
         
         .silhouette {
@@ -264,6 +268,18 @@
             background: #f8d7da;
             color: #721c24;
             border: 1px solid #721c24;
+        }
+        
+        .legendary-danger {
+            background: #e6d4f7;
+            color: var(--legendary);
+            border: 1px solid var(--legendary);
+        }
+        
+        .mythical-danger {
+            background: #f7d4e6;
+            color: var(--mythical);
+            border: 1px solid var(--mythical);
         }
         
         .notes-section {
@@ -778,6 +794,8 @@
                                     <option value="Medium">Medium</option>
                                     <option value="High">High</option>
                                     <option value="Deadly">Deadly</option>
+                                    <option value="Legendary">Legendary</option>
+                                    <option value="Mythical">Mythical</option>
                                 </select>
                             </div>
                             <div class="form-group">
@@ -896,6 +914,24 @@
                 dangerLevel: "High",
                 dmSecrets: "Displacer beasts project a false image of themselves a few feet away from their actual position. They hate blink dogs and will hunt them relentlessly.",
                 defaultStage: 0
+            },
+            {
+                id: 5,
+                name: "Ancient Red Dragon",
+                image: "",
+                type: "Dragon",
+                dangerLevel: "Legendary",
+                dmSecrets: "Ancient red dragons are among the most powerful creatures in existence. Their lairs are filled with magma and treasure, guarded by powerful minions.",
+                defaultStage: 0
+            },
+            {
+                id: 6,
+                name: "Tarrasque",
+                image: "",
+                type: "Monstrosity",
+                dangerLevel: "Mythical",
+                dmSecrets: "The Tarrasque is a near-unstoppable engine of destruction. Legends say only a wish spell can truly kill it, and even then it might return.",
+                defaultStage: 0
             }
         ];
         
@@ -903,7 +939,9 @@
             { id: 1, stage: 1, notes: "Encountered in the caves beneath Castle Rend.", playerImage: null },
             { id: 2, stage: 0, notes: "", playerImage: null },
             { id: 3, stage: 0, notes: "", playerImage: null },
-            { id: 4, stage: 0, notes: "", playerImage: null }
+            { id: 4, stage: 0, notes: "", playerImage: null },
+            { id: 5, stage: 0, notes: "", playerImage: null },
+            { id: 6, stage: 0, notes: "", playerImage: null }
         ];
         
         // Silhouette image for unknown monsters
@@ -915,6 +953,7 @@
         let dmModeActive = false;
         let editingMonsterId = null;
         let currentStageChange = { id: null, newStage: null };
+        let currentMonsterImage = null; // Store image data for form
         
         // DOM Elements
         const monsterList = document.getElementById('monster-list');
@@ -1090,6 +1129,8 @@
                 else if (monster.dangerLevel === 'Medium') dangerClass = 'medium-danger';
                 else if (monster.dangerLevel === 'High') dangerClass = 'high-danger';
                 else if (monster.dangerLevel === 'Deadly') dangerClass = 'deadly-danger';
+                else if (monster.dangerLevel === 'Legendary') dangerClass = 'legendary-danger';
+                else if (monster.dangerLevel === 'Mythical') dangerClass = 'mythical-danger';
                 
                 card.innerHTML = `
                     <div class="monster-number">#${monster.id}</div>
@@ -1184,6 +1225,8 @@
                 else if (monster.dangerLevel === 'Medium') dangerClass = 'medium-danger';
                 else if (monster.dangerLevel === 'High') dangerClass = 'high-danger';
                 else if (monster.dangerLevel === 'Deadly') dangerClass = 'deadly-danger';
+                else if (monster.dangerLevel === 'Legendary') dangerClass = 'legendary-danger';
+                else if (monster.dangerLevel === 'Mythical') dangerClass = 'mythical-danger';
                 
                 card.innerHTML = `
                     <div class="monster-number">#${monster.id}</div>
@@ -1534,7 +1577,8 @@
                 
                 const reader = new FileReader();
                 reader.onload = function(event) {
-                    document.getElementById('image-preview').style.backgroundImage = `url('${event.target.result}')`;
+                    currentMonsterImage = event.target.result;
+                    document.getElementById('image-preview').style.backgroundImage = `url('${currentMonsterImage}')`;
                 };
                 reader.readAsDataURL(file);
             });
@@ -1567,6 +1611,7 @@
         // Add a new monster
         function addNewMonster() {
             editingMonsterId = null;
+            currentMonsterImage = null;
             document.getElementById('form-title').textContent = 'Add New Monster';
             document.getElementById('monster-name').value = '';
             document.getElementById('monster-type').value = 'Beast';
@@ -1587,6 +1632,7 @@
             if (!monster) return;
             
             editingMonsterId = id;
+            currentMonsterImage = monster.image || null;
             document.getElementById('form-title').textContent = `Edit ${monster.name}`;
             document.getElementById('monster-name').value = monster.name;
             document.getElementById('monster-type').value = monster.type;
@@ -1611,8 +1657,7 @@
             const dangerLevel = document.getElementById('danger-level').value;
             const defaultStage = parseInt(document.getElementById('default-stage').value);
             const dmSecrets = document.getElementById('dm-secrets').value;
-            const imagePreview = document.getElementById('image-preview');
-            const image = imagePreview.style.backgroundImage.slice(5, -2); // Extract URL
+            const image = currentMonsterImage;
             
             if (!name) {
                 dmStatus.textContent = "Please enter a monster name";
@@ -1663,6 +1708,7 @@
             
             // Reset form
             editingMonsterId = null;
+            currentMonsterImage = null;
             document.getElementById('form-title').textContent = 'Add New Monster';
             document.getElementById('monster-name').value = '';
             document.getElementById('monster-type').value = 'Beast';
@@ -1679,6 +1725,7 @@
         // Cancel edit
         function cancelEdit() {
             editingMonsterId = null;
+            currentMonsterImage = null;
             document.getElementById('form-title').textContent = 'Add New Monster';
             document.getElementById('monster-name').value = '';
             document.getElementById('monster-type').value = 'Beast';
