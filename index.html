@@ -308,6 +308,30 @@
             border-top: 1px dashed #ccc;
         }
         
+        /* Player Image Upload */
+        .player-image-upload {
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px dashed #ccc;
+        }
+        
+        .player-image-upload label {
+            display: block;
+            margin-bottom: 5px;
+            font-size: 0.9rem;
+            color: var(--dark-leather);
+        }
+        
+        .player-image-preview {
+            width: 100%;
+            height: 100px;
+            margin-top: 5px;
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            border: 1px dashed #aaa;
+        }
+        
         /* DM View Styles */
         .dm-login {
             max-width: 500px;
@@ -876,10 +900,10 @@
         ];
         
         const initialProgress = [
-            { id: 1, stage: 1, notes: "Encountered in the caves beneath Castle Rend." },
-            { id: 2, stage: 0, notes: "" },
-            { id: 3, stage: 0, notes: "" },
-            { id: 4, stage: 0, notes: "" }
+            { id: 1, stage: 1, notes: "Encountered in the caves beneath Castle Rend.", playerImage: null },
+            { id: 2, stage: 0, notes: "", playerImage: null },
+            { id: 3, stage: 0, notes: "", playerImage: null },
+            { id: 4, stage: 0, notes: "", playerImage: null }
         ];
         
         // Silhouette image for unknown monsters
@@ -949,7 +973,7 @@
                 const term = searchTerm.toLowerCase().trim();
                 filteredMonsters = monsters.filter(monster => {
                     const monsterProgress = progress.find(p => p.id === monster.id) || 
-                                           { id: monster.id, stage: monster.defaultStage, notes: '' };
+                                           { id: monster.id, stage: monster.defaultStage, notes: '', playerImage: null };
                     
                     // Search by number
                     if (monster.id.toString().includes(term)) {
@@ -967,7 +991,7 @@
             
             filteredMonsters.forEach(monster => {
                 const monsterProgress = progress.find(p => p.id === monster.id) || 
-                                       { id: monster.id, stage: monster.defaultStage, notes: '' };
+                                       { id: monster.id, stage: monster.defaultStage, notes: '', playerImage: null };
                 
                 const card = document.createElement('div');
                 card.className = 'monster-card';
@@ -977,6 +1001,7 @@
                 let notesContent = '';
                 let secretsContent = '';
                 let stageControls = '';
+                let playerImageContent = '';
                 
                 // Stage 0: Unknown
                 if (monsterProgress.stage === 0) {
@@ -992,13 +1017,27 @@
                 // Stage 1: Seen
                 else if (monsterProgress.stage === 1) {
                     nameContent = `<div class="monster-name">${monster.name}</div>`;
-                    imageStyle = `background-image: url('${monster.image || silhouetteImage}')`;
+                    
+                    // Use player image if available, else use DM image or silhouette
+                    const imageUrl = monsterProgress.playerImage || monster.image || silhouetteImage;
+                    imageStyle = `background-image: url('${imageUrl}')`;
+                    
                     notesContent = `
                         <div class="notes-section">
                             <h4>Notes</h4>
                             <textarea class="notes-textarea" data-id="${monster.id}">${monsterProgress.notes || ''}</textarea>
                         </div>
                     `;
+                    
+                    // Add player image upload section
+                    playerImageContent = `
+                        <div class="player-image-upload">
+                            <label>Upload your own image:</label>
+                            <input type="file" class="player-image-input" data-id="${monster.id}" accept="image/*">
+                            <div class="player-image-preview" style="${monsterProgress.playerImage ? `background-image: url('${monsterProgress.playerImage}')` : ''}"></div>
+                        </div>
+                    `;
+                    
                     stageControls = `
                         <div class="stage-control">
                             <button class="stage-btn prev" data-id="${monster.id}" data-stage="0">Set to Unknown</button>
@@ -1009,19 +1048,34 @@
                 // Stage 2: Researched
                 else if (monsterProgress.stage === 2) {
                     nameContent = `<div class="monster-name">${monster.name}</div>`;
-                    imageStyle = `background-image: url('${monster.image || silhouetteImage}')`;
+                    
+                    // Use player image if available, else use DM image or silhouette
+                    const imageUrl = monsterProgress.playerImage || monster.image || silhouetteImage;
+                    imageStyle = `background-image: url('${imageUrl}')`;
+                    
                     notesContent = `
                         <div class="notes-section">
                             <h4>Notes</h4>
                             <textarea class="notes-textarea" data-id="${monster.id}">${monsterProgress.notes || ''}</textarea>
                         </div>
                     `;
+                    
                     secretsContent = `
                         <div class="dm-secrets">
                             <h4>DM Secrets</h4>
                             <p>${monster.dmSecrets}</p>
                         </div>
                     `;
+                    
+                    // Add player image upload section
+                    playerImageContent = `
+                        <div class="player-image-upload">
+                            <label>Upload your own image:</label>
+                            <input type="file" class="player-image-input" data-id="${monster.id}" accept="image/*">
+                            <div class="player-image-preview" style="${monsterProgress.playerImage ? `background-image: url('${monsterProgress.playerImage}')` : ''}"></div>
+                        </div>
+                    `;
+                    
                     stageControls = `
                         <div class="stage-control">
                             <button class="stage-btn prev" data-id="${monster.id}" data-stage="1">Set to Seen</button>
@@ -1044,6 +1098,7 @@
                     <div class="monster-type">${monsterProgress.stage > 0 ? monster.type : 'Unknown'}</div>
                     <div class="danger-level ${dangerClass}">${monsterProgress.stage > 0 ? monster.dangerLevel : '???'}</div>
                     ${notesContent}
+                    ${playerImageContent}
                     ${secretsContent}
                     ${stageControls}
                 `;
@@ -1060,6 +1115,31 @@
                         monsterProgress.notes = this.value;
                         saveData();
                     }
+                });
+            });
+            
+            // Add event listeners to player image inputs
+            document.querySelectorAll('.player-image-input').forEach(input => {
+                input.addEventListener('change', function(e) {
+                    const id = parseInt(this.dataset.id);
+                    const file = e.target.files[0];
+                    if (!file) return;
+                    
+                    const reader = new FileReader();
+                    reader.onload = function(event) {
+                        const monsterProgress = progress.find(p => p.id === id);
+                        if (monsterProgress) {
+                            monsterProgress.playerImage = event.target.result;
+                            saveData();
+                            renderPlayerMonsters(playerSearch.value); // Re-render to show the new image
+                            
+                            // Show success message
+                            playerStatus.textContent = "Image uploaded successfully!";
+                            playerStatus.className = "status-message success";
+                            setTimeout(() => playerStatus.textContent = "", 3000);
+                        }
+                    };
+                    reader.readAsDataURL(file);
                 });
             });
             
@@ -1092,7 +1172,7 @@
             
             monsters.forEach(monster => {
                 const monsterProgress = progress.find(p => p.id === monster.id) || 
-                                       { id: monster.id, stage: monster.defaultStage, notes: '' };
+                                       { id: monster.id, stage: monster.defaultStage, notes: '', playerImage: null };
                 
                 const card = document.createElement('div');
                 card.className = 'monster-card';
@@ -1113,6 +1193,9 @@
                     <div class="danger-level ${dangerClass}">${monster.dangerLevel}</div>
                     <div class="stage-indicator">
                         <strong>Player Stage:</strong> ${monsterProgress.stage}
+                    </div>
+                    <div class="player-image-indicator" style="margin-top: 5px; font-size: 0.9em;">
+                        ${monsterProgress.playerImage ? '<i class="fas fa-image"></i> Player has custom image' : ''}
                     </div>
                     <div class="monster-actions">
                         <button class="btn btn-primary edit-btn" data-id="${monster.id}">
@@ -1245,7 +1328,8 @@
                                             progress.push({
                                                 id: monster.id,
                                                 stage: monster.defaultStage,
-                                                notes: ""
+                                                notes: "",
+                                                playerImage: null
                                             });
                                             addedCount++;
                                         }
@@ -1318,7 +1402,8 @@
                                             progress.push({
                                                 id: monster.id,
                                                 stage: monster.defaultStage,
-                                                notes: ""
+                                                notes: "",
+                                                playerImage: null
                                             });
                                             addedCount++;
                                         }
@@ -1378,7 +1463,7 @@
                 
                 let monsterProgress = progress.find(p => p.id === id);
                 if (!monsterProgress) {
-                    monsterProgress = { id: id, stage: monster.defaultStage, notes: '' };
+                    monsterProgress = { id: id, stage: monster.defaultStage, notes: '', playerImage: null };
                     progress.push(monsterProgress);
                 }
                 
@@ -1549,7 +1634,7 @@
                 };
                 
                 monsters.push(newMonster);
-                progress.push({ id: newId, stage: defaultStage, notes: '' });
+                progress.push({ id: newId, stage: defaultStage, notes: '', playerImage: null });
                 
                 dmStatus.textContent = `Added new monster: ${name}!`;
                 dmStatus.className = "status-message success";
