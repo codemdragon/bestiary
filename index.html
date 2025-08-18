@@ -992,13 +992,21 @@
         
         // Save data to localStorage
         function saveData() {
-            localStorage.setItem('monsters', JSON.stringify(monsters));
-            localStorage.setItem('progress', JSON.stringify(progress));
-            
-            // Update save status indicator
-            const now = new Date();
-            document.getElementById('save-status').textContent = 
-                `Last saved: ${now.toLocaleTimeString()}`;
+            try {
+                localStorage.setItem('monsters', JSON.stringify(monsters));
+                localStorage.setItem('progress', JSON.stringify(progress));
+                
+                // Update save status indicator
+                const now = new Date();
+                document.getElementById('save-status').textContent = 
+                    `Last saved: ${now.toLocaleTimeString()}`;
+            } catch (error) {
+                console.error("Failed to save data:", error);
+                const statusElement = dmModeActive ? dmStatus : playerStatus;
+                statusElement.textContent = "Error saving data: " + error.message;
+                statusElement.className = "status-message error";
+                setTimeout(() => statusElement.textContent = "", 5000);
+            }
         }
         
         // Render monsters for player view
@@ -1587,6 +1595,21 @@
             document.getElementById('confirm-stage-btn').addEventListener('click', function() {
                 if (currentStageChange.id) {
                     let monsterProgress = progress.find(p => p.id === currentStageChange.id);
+                    
+                    // Create progress entry if it doesn't exist
+                    if (!monsterProgress) {
+                        const monster = monsters.find(m => m.id === currentStageChange.id);
+                        if (monster) {
+                            monsterProgress = {
+                                id: currentStageChange.id,
+                                stage: currentStageChange.newStage,
+                                notes: '',
+                                playerImage: null
+                            };
+                            progress.push(monsterProgress);
+                        }
+                    }
+                    
                     if (monsterProgress) {
                         monsterProgress.stage = currentStageChange.newStage;
                         saveData();
@@ -1666,7 +1689,7 @@
             }
             
             if (editingMonsterId === null) {
-                // Add new monster
+                // Add new monster - calculate ID correctly even when monsters are deleted
                 const newId = monsters.length > 0 ? Math.max(...monsters.map(m => m.id)) + 1 : 1;
                 const newMonster = {
                     id: newId,
@@ -1680,6 +1703,18 @@
                 
                 monsters.push(newMonster);
                 progress.push({ id: newId, stage: defaultStage, notes: '', playerImage: null });
+                
+                saveData();
+                renderPlayerMonsters();
+                renderDMMonsters();
+                
+                // Scroll to the new monster card
+                setTimeout(() => {
+                    const newCard = document.querySelector(`.monster-card[data-id="${newId}"]`);
+                    if (newCard) {
+                        newCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                    }
+                }, 100);
                 
                 dmStatus.textContent = `Added new monster: ${name}!`;
                 dmStatus.className = "status-message success";
@@ -1697,14 +1732,14 @@
                         image: image || monsters[monsterIndex].image
                     };
                     
+                    saveData();
+                    renderPlayerMonsters();
+                    renderDMMonsters();
+                    
                     dmStatus.textContent = `Updated monster: ${name}!`;
                     dmStatus.className = "status-message success";
                 }
             }
-            
-            saveData();
-            renderPlayerMonsters(playerSearch.value);
-            renderDMMonsters();
             
             // Reset form
             editingMonsterId = null;
@@ -1752,7 +1787,7 @@
             progress = progress.filter(p => p.id !== id);
             
             saveData();
-            renderPlayerMonsters(playerSearch.value);
+            renderPlayerMonsters();
             renderDMMonsters();
             
             dmStatus.textContent = `Deleted monster: ${monster.name}!`;
